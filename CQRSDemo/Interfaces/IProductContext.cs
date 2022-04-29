@@ -11,7 +11,5 @@ namespace CQRSDemo.Interfaces
         ValueTask<bool> Update(Product product);
         ValueTask<bool> Update(int id, string propertyName, object value);
         ValueTask<bool> Delete(int id);
-
-        event EventHandler<ExceptionEventArgs>? ExceptionEvent;
     }
 }

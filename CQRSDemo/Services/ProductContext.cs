@@ -8,8 +8,7 @@ namespace CQRSDemo.Services
     public class ProductContext : IProductContext
     {
         //Instalar System.Data.SqlClient
-        private readonly string CnnString;
-        public event EventHandler<ExceptionEventArgs>? ExceptionEvent;
+        private readonly string CnnString;        
         public ProductContext(string cnnString)
         {
             this.CnnString = cnnString;
@@ -17,28 +16,19 @@ namespace CQRSDemo.Services
 
         public ValueTask<int> Create(Product product)
         {
-            int Result = -1;
-            try
+            using (SqlConnection connection = new SqlConnection(CnnString))
             {
-                using (SqlConnection connection = new SqlConnection(CnnString))
-                {
-                    connection.Open();
-                    SqlCommand command = 
-                        new($"Insert Into Product (Name, UnitPrice, Discontinued, Quantity) Values (@Name, @UnitPrice, @Discontinued, @Quantity); Select @@Identity", connection);
-                    command.Parameters.Add(new SqlParameter("@Name", product.Name));
-                    command.Parameters.Add(new SqlParameter("@UnitPrice", product.UnitPrice));
-                    command.Parameters.Add(new SqlParameter("@Discontinued", product.Discontinued));
-                    command.Parameters.Add(new SqlParameter("@Quantity", product.Quantity));
+                connection.Open();
+                SqlCommand command =
+                    new($"Insert Into Product (Name, UnitPrice, Discontinued, Quantity) Values (@Name, @UnitPrice, @Discontinued, @Quantity); Select @@Identity", connection);
+                command.Parameters.Add(new SqlParameter("@Name", product.Name));
+                command.Parameters.Add(new SqlParameter("@UnitPrice", product.UnitPrice));
+                command.Parameters.Add(new SqlParameter("@Discontinued", product.Discontinued));
+                command.Parameters.Add(new SqlParameter("@Quantity", product.Quantity));
 
-                    var exec = command.ExecuteScalar();
-                    Result = exec == null ? 0 : Convert.ToInt32(exec);
-                }
+                var exec = command.ExecuteScalar();
+                Result = exec == null ? 0 : Convert.ToInt32(exec);
             }
-            catch (Exception ex)
-            {
-                ExceptionEvent?.Invoke(this, new ExceptionEventArgs(ex));
-            }
-            return ValueTask.FromResult(Result);
         }
 
         public ValueTask<List<Product>> Retrieve()

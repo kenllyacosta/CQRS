@@ -25,7 +25,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/oops", () => Results.Problem());
 
-string ExceptionMessage = "";
 app.MapPost("/Products", async ([FromServices] IProductContext context) =>
 {
     return await context.Create(new CQRSDemo.Models.Product() { Name = "Naranjas", Discontinued = false, Quantity = 0, UnitPrice = 2 });
