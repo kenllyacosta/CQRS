@@ -7,7 +7,6 @@ namespace CQRSDemo.Services
 {
     public class ProductContext : IProductContext
     {
-        //Instalar System.Data.SqlClient
         private readonly string CnnString;        
         public ProductContext(string cnnString)
         {
@@ -16,6 +15,7 @@ namespace CQRSDemo.Services
 
         public ValueTask<int> Create(Product product)
         {
+            int Result = 0;
             using (SqlConnection connection = new SqlConnection(CnnString))
             {
                 connection.Open();
@@ -29,6 +29,8 @@ namespace CQRSDemo.Services
                 var exec = command.ExecuteScalar();
                 Result = exec == null ? 0 : Convert.ToInt32(exec);
             }
+
+            return ValueTask.FromResult(Result);
         }
 
         public ValueTask<List<Product>> Retrieve()
