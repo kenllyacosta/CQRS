@@ -28,11 +28,7 @@ app.MapGet("/oops", () => Results.Problem());
 string ExceptionMessage = "";
 app.MapPost("/Products", async ([FromServices] IProductContext context) =>
 {
-    context.ExceptionEvent += Context_ExceptionEvent;
-    var datos = await context.Create(new CQRSDemo.Models.Product() { Name = "Azúcar", Discontinued = false, Quantity = 0, UnitPrice = 10 });
-    context.ExceptionEvent -= Context_ExceptionEvent;
-
-    return string.IsNullOrWhiteSpace(ExceptionMessage) ? Results.Ok(ValueTask.FromResult(datos)) : Results.Problem(ExceptionMessage, statusCode:400);
+    return await context.Create(new CQRSDemo.Models.Product() { Name = "Naranjas", Discontinued = false, Quantity = 0, UnitPrice = 2 });
 });
 
 app.MapGet("/Products", async ([FromServices] IProductContext context) =>
@@ -59,10 +55,5 @@ app.MapDelete("/Products/{id}", async ([FromServices] IProductContext context, i
 {
     return await context.Delete(id);
 });
-
-void Context_ExceptionEvent(object? sender, ExceptionEventArgs e)
-{
-    ExceptionMessage = e.Exception.Message;
-}
 
 app.Run();
