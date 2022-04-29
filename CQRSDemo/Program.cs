@@ -1,6 +1,9 @@
+using CQRSDemo.Application.Product.Commands;
+using CQRSDemo.Application.Product.Queries;
 using CQRSDemo.Interfaces;
 using CQRSDemo.Models;
 using CQRSDemo.Services;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +14,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IProductContext>(new ProductContext(builder.Configuration.GetConnectionString("DBDemo")));
+
+builder.Services.AddMediatR(typeof(Program));
 
 var app = builder.Build();
 
@@ -25,34 +30,34 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/oops", () => Results.Problem());
 
-app.MapPost("/Products", async ([FromServices] IProductContext context) =>
+app.MapPost("/Products", async ([FromServices] IMediator mediator, CreateProductCommand command) =>
 {
-    return await context.Create(new CQRSDemo.Models.Product() { Name = "Naranjas", Discontinued = false, Quantity = 0, UnitPrice = 2 });
+    return await mediator.Send(command);
 });
 
-app.MapGet("/Products", async ([FromServices] IProductContext context) =>
+app.MapGet("/Products", async ([FromServices] IMediator mediator) =>
 {
-    return await context.Retrieve();
+    return await mediator.Send(new GetProductsQuery());
 });
 
-app.MapGet("/Products/{id}", async ([FromServices] IProductContext context, int id) =>
+app.MapGet("/Products/{id}", async ([FromServices] IMediator mediator, int id) =>
 {
-    return await context.Retrieve(id);
+    return await mediator.Send(new GetProductByIdQuery(id));
 });
 
-app.MapPut("/Products", async ([FromServices] IProductContext context, Product product) =>
+app.MapPut("/Products", async ([FromServices] IMediator mediator, Product product) =>
 {
-    return await context.Update(product);
+    return await mediator.Send(new UpdateProductCommand(product));
 });
 
-app.MapMethods("/Products/{id}", new[] { "PATCH" }, async ([FromServices] IProductContext context, int id, string propertyName, string value) =>
+app.MapMethods("/Products/{id}", new[] { "PATCH" }, async ([FromServices] IMediator mediator, int id, string propertyName, string value) =>
 {
-    return await context.Update(id, propertyName, value);
+    return await mediator.Send(new UpdateProductFieldCommand(id, propertyName, value));
 });
 
-app.MapDelete("/Products/{id}", async ([FromServices] IProductContext context, int id) =>
+app.MapDelete("/Products/{id}", async ([FromServices] IMediator mediator, int id) =>
 {
-    return await context.Delete(id);
+    return await mediator.Send(new DeleteProductCommand(id));
 });
 
 app.Run();
